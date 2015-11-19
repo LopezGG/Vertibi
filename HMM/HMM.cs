@@ -12,15 +12,22 @@ namespace HMM
         public Dictionary<String, double> initBlock;
         public Dictionary<String, Dictionary<String, double>> TransitionBlock;
         public Dictionary<String, Dictionary<String, double>> EmissionBlock;
-        public List<string> symbolList;
-        public List<string> statesList;
+        public Dictionary<String, int> symbolList ;
+        public Dictionary<String, int> statesList ;
+        public List<String> revStatesList;
+        public int symbolCount;
+        public int stateCount;
+
         public HMM()
         {
             initBlock = new Dictionary<String, double>();
             TransitionBlock = new Dictionary<string, Dictionary<string, double>>();
             EmissionBlock = new Dictionary<string, Dictionary<string, double>>();
-            symbolList = new List<string>();
-            statesList = new List<string>();
+            symbolList = new Dictionary<string, int>();
+            statesList = new Dictionary<string, int>();
+            revStatesList = new List<string>();
+            symbolCount = 0;
+            stateCount = 0;
         }
         public void validateFillHmm(string inputpath)
         {
@@ -131,11 +138,21 @@ namespace HMM
                     TransitionBlock[t1].Add(t2, prob);
                 else
                     TransitionBlock.Add(t1, new Dictionary<string, double> { { t2, prob } });
-                statesList.Add(t1);
-                statesList.Add(t2);
+                if (!statesList.ContainsKey(t1))
+                {
+                    revStatesList.Add(t1);
+                    statesList.Add(t1, stateCount++);
+                }
+                    
+                if (!statesList.ContainsKey(t2))
+                {
+                    revStatesList.Add(t2);
+                    statesList.Add(t2, stateCount++);
+                }
+                    
 
             }
-            statesList = statesList.Distinct().ToList();
+
             while (!line.Contains(@"\emission"))
             {
                 if (linecount >= AllInputString.Count)
@@ -165,10 +182,14 @@ namespace HMM
                 else
                     EmissionBlock.Add(t1, new Dictionary<string, double> { { observation, prob } });
                 //here t2 is hte observation
-                symbolList.Add(observation);
+                if (!symbolList.ContainsKey(observation))
+                {
+                    symbolList.Add(observation, symbolCount++);
+                }
+                    
 
             }
-            symbolList = symbolList.Distinct().ToList();
+
             double totalProb = 0;
             foreach (var items in initBlock)
             {
@@ -181,8 +202,6 @@ namespace HMM
             }
             foreach (var tagset in TransitionBlock)
             {
-                if (tagset.Key == "BOS_BOS")
-                    Console.WriteLine("Wait");
                 totalProb = 0;
                 foreach (var items in tagset.Value)
                 {
