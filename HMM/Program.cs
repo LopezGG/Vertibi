@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace HMM
             string outputFile = args[2];
             HMM HmmInput = new HMM();
             HmmInput.validateFillHmm(inputHmm);
+            Stopwatch stopwatch = Stopwatch.StartNew();
             String Input = "<s> Influential members of the House Ways and Means Committee introduced legislation that would restrict how the new savings-and-loan bailout agency can raise capital , creating another potential obstacle to the government 's sale of sick thrifts ." + @" </s> </s>";
             string[] words = Input.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             Double[,] Vertibi = new Double[HmmInput.statesList.Count + 2, words.Length + 2];
@@ -44,22 +46,27 @@ namespace HMM
                 for (int j = 0; j < HmmInput.revStatesList.Count; j++)
                 {
                     prevTag = HmmInput.revStatesList[j];
-                    for (int i = 0; i < HmmInput.revStatesList.Count; i++)
+                    if (!HmmInput.TransitionBlock.ContainsKey(prevTag))
+                        continue;
+                    if (Vertibi[j, t] == 0.0)
+                        continue;
+                    foreach (var State in HmmInput.TransitionBlock[prevTag])
                     {
-                        curTag = HmmInput.revStatesList[i];
-                        if (HmmInput.TransitionBlock.ContainsKey(prevTag) && HmmInput.TransitionBlock[prevTag].ContainsKey(curTag))
-                            transProb = Math.Log10((HmmInput.TransitionBlock[prevTag])[curTag]);
+                        curTag = State.Key;
+                        int i = HmmInput.statesList[curTag];
+                        if (HmmInput.LogTransitionBlock.ContainsKey(prevTag) && HmmInput.LogTransitionBlock[prevTag].ContainsKey(curTag))
+                            transProb = (HmmInput.LogTransitionBlock[prevTag])[curTag];
                         else
                             transProb = 0;
 
-                        if (HmmInput.EmissionBlock.ContainsKey(curTag) && HmmInput.EmissionBlock[curTag].ContainsKey(curword))
-                            emissionProb = Math.Log10(((HmmInput.EmissionBlock[curTag])[curword]) == 1.0 ? 0.999 : (HmmInput.EmissionBlock[curTag])[curword]);
-                        else if (!HmmInput.symbolList.ContainsKey(curword) && HmmInput.EmissionBlock[curTag].ContainsKey(unknown))
-                            emissionProb = Math.Log10((HmmInput.EmissionBlock[curTag])[unknown]);
+                        if (HmmInput.logEmissionBlock.ContainsKey(curTag) && HmmInput.logEmissionBlock[curTag].ContainsKey(curword))
+                            emissionProb = (HmmInput.logEmissionBlock[curTag])[curword];
+                        else if (!HmmInput.symbolList.ContainsKey(curword) && HmmInput.logEmissionBlock[curTag].ContainsKey(unknown))
+                            emissionProb =  (HmmInput.logEmissionBlock[curTag])[unknown];
                         else
                             emissionProb = 0;
 
-                        if ( transProb == 0 || emissionProb == 0)
+                        if (transProb == 0 || emissionProb == 0)
                             curProb = int.MinValue;
                         else
                             curProb = Vertibi[j, t] + transProb + emissionProb;
@@ -85,7 +92,6 @@ namespace HMM
                     maxProb = curProb;
                 }
             }
-            Console.WriteLine(Vertibi[maxStateRowIndex,wordIndex]);
             List<String> sb = new List<String>();
             sb.Add(Convert.ToString(Vertibi[maxStateRowIndex, wordIndex]));
             
@@ -99,8 +105,11 @@ namespace HMM
             sb.Reverse();
             var result = string.Join(" ", sb);
             Console.WriteLine(result);
-            Console.WriteLine("finished building the vertibi table");
+            Console.WriteLine("finished building the vertibi table : ");
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
             Console.ReadLine();
+            
         }
     }
 }

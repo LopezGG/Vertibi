@@ -11,7 +11,9 @@ namespace HMM
     {
         public Dictionary<String, double> initBlock;
         public Dictionary<String, Dictionary<String, double>> TransitionBlock;
+        public Dictionary<String, Dictionary<String, double>> LogTransitionBlock;
         public Dictionary<String, Dictionary<String, double>> EmissionBlock;
+        public Dictionary<String, Dictionary<String, double>> logEmissionBlock;
         public Dictionary<String, int> symbolList ;
         public Dictionary<String, int> statesList ;
         public List<String> revStatesList;
@@ -22,7 +24,9 @@ namespace HMM
         {
             initBlock = new Dictionary<String, double>();
             TransitionBlock = new Dictionary<string, Dictionary<string, double>>();
+            LogTransitionBlock = new Dictionary<string, Dictionary<string, double>>(); 
             EmissionBlock = new Dictionary<string, Dictionary<string, double>>();
+            logEmissionBlock = new Dictionary<string, Dictionary<string, double>>();
             symbolList = new Dictionary<string, int>();
             statesList = new Dictionary<string, int>();
             revStatesList = new List<string>();
@@ -51,7 +55,7 @@ namespace HMM
             int initBLockCount = 0, TransmissionBlockCount = 0, EmmissionBlockCount = 0;
             string t1, t2, temp;
 
-            double prob;
+            double prob, logprob ;
             line = AllInputString[linecount++];
             if (line.Contains("state_num"))
             {
@@ -126,18 +130,26 @@ namespace HMM
                 if (tempwords.Length < 4)
                 {
                     throw new Exception("warning: TransitionBlock not properly formed with 4 columns and hence reading this block is aborted");
-                    break;
                 }
                 t1 = tempwords[0];
                 t2 = tempwords[1];
                 prob = Convert.ToDouble(tempwords[2]);
+                logprob = (Convert.ToDouble(tempwords[2]) == 1) ? Math.Log10(0.99999) : Math.Log10(Convert.ToDouble(tempwords[2])); 
                 TransmissionBlockCount++;
                 if (TransitionBlock.ContainsKey(t1) && TransitionBlock[t1].ContainsKey(t2))
                     Console.WriteLine("warning: TransitionBlock  block has duplicate entries");
                 else if (TransitionBlock.ContainsKey(t1))
+                {
                     TransitionBlock[t1].Add(t2, prob);
+                    LogTransitionBlock[t1].Add(t2, logprob);
+                }
+                    
                 else
+                {
                     TransitionBlock.Add(t1, new Dictionary<string, double> { { t2, prob } });
+                    LogTransitionBlock.Add(t1, new Dictionary<string, double> { { t2, logprob } });
+                }
+                    
                 if (!statesList.ContainsKey(t1))
                 {
                     revStatesList.Add(t1);
@@ -174,13 +186,22 @@ namespace HMM
                 t1 = tempwords[0];
                 string observation = tempwords[1];
                 prob = Convert.ToDouble(tempwords[2]);
+                logprob = (Convert.ToDouble(tempwords[2]) == 1) ? Math.Log10(0.99999) : Math.Log10(Convert.ToDouble(tempwords[2])); 
                 EmmissionBlockCount++;
                 if (EmissionBlock.ContainsKey(t1) && EmissionBlock[t1].ContainsKey(observation))
                     Console.WriteLine("warning: EmissionBlock  block has duplicate entries");
                 else if (EmissionBlock.ContainsKey(t1))
+                {
                     EmissionBlock[t1].Add(observation, prob);
+                    logEmissionBlock[t1].Add(observation, logprob);
+                }
+                    
                 else
+                {
                     EmissionBlock.Add(t1, new Dictionary<string, double> { { observation, prob } });
+                    logEmissionBlock.Add(t1, new Dictionary<string, double> { { observation, logprob } });
+                }
+                    
                 //here t2 is hte observation
                 if (!symbolList.ContainsKey(observation))
                 {
