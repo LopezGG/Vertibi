@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,31 @@ namespace HMM
             HMM HmmInput = new HMM();
             HmmInput.validateFillHmm(inputHmm);
             Stopwatch stopwatch = Stopwatch.StartNew();
-            String Input = "<s> Influential members of the House Ways and Means Committee introduced legislation that would restrict how the new savings-and-loan bailout agency can raise capital , creating another potential obstacle to the government 's sale of sick thrifts ." + @" </s> </s>";
+            String Input;
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+            StreamWriter Sw = new StreamWriter(outputFile,true);
+            using (StreamReader Sr = new StreamReader(testFile))
+            {
+                while((Input=Sr.ReadLine())!=null)
+                {
+                    Input = "<s> " + Input + " </s>";
+                    if (String.IsNullOrWhiteSpace(Input))
+                        continue;
+                    Viterbi(Input, HmmInput,Sw);
+                }
+            }
+             Console.WriteLine("finished building the vertibi table : ");
+             Sw.Close();
+            stopwatch.Stop();
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
+            //Console.ReadLine();
+            
+        }
+        public static void Viterbi(String Input, HMM HmmInput, StreamWriter Sw)
+        {
             string[] words = Input.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             Double[,] Vertibi = new Double[HmmInput.statesList.Count + 2, words.Length + 2];
             int[,] BackTrack = new int[HmmInput.statesList.Count + 2, words.Length + 2];
@@ -29,7 +54,7 @@ namespace HMM
                 double initProb = 0;
                 if (HmmInput.initBlock.ContainsKey(HmmInput.revStatesList[i]))
                 {
-                    initProb = Math.Log10((HmmInput.initBlock[HmmInput.revStatesList[i]]) == 1.0 ? 0.99 : HmmInput.initBlock[HmmInput.revStatesList[i]] );
+                    initProb = Math.Log10((HmmInput.initBlock[HmmInput.revStatesList[i]]) == 1.0 ? 0.99 : HmmInput.initBlock[HmmInput.revStatesList[i]]);
                 }
 
                 else
@@ -39,7 +64,7 @@ namespace HMM
             }
 
             double maxProb = int.MinValue, curProb, transProb = 0, emissionProb = 0;
-            string curTag,curword,prevTag,unknown = @"<unk>";
+            string curTag, curword, prevTag, unknown = @"<unk>";
             for (int t = 0; t < words.Length; t++)
             {
                 curword = words[t];
@@ -62,7 +87,7 @@ namespace HMM
                         if (HmmInput.logEmissionBlock.ContainsKey(curTag) && HmmInput.logEmissionBlock[curTag].ContainsKey(curword))
                             emissionProb = (HmmInput.logEmissionBlock[curTag])[curword];
                         else if (!HmmInput.symbolList.ContainsKey(curword) && HmmInput.logEmissionBlock[curTag].ContainsKey(unknown))
-                            emissionProb =  (HmmInput.logEmissionBlock[curTag])[unknown];
+                            emissionProb = (HmmInput.logEmissionBlock[curTag])[unknown];
                         else
                             emissionProb = 0;
 
@@ -81,7 +106,7 @@ namespace HMM
             }
             //this gives the index from which we must start backtracking
             int maxStateRowIndex = 0;
-            int wordIndex = words.Length-1;
+            int wordIndex = words.Length ;
             maxProb = int.MinValue;
             for (int i = 0; i < HmmInput.revStatesList.Count; i++)
             {
@@ -94,8 +119,8 @@ namespace HMM
             }
             List<String> sb = new List<String>();
             sb.Add(Convert.ToString(Vertibi[maxStateRowIndex, wordIndex]));
-            
-            while (wordIndex >= 0 && maxStateRowIndex > 0)
+
+            while (wordIndex > 0 && maxStateRowIndex >= 0)
             {
                 sb.Add(HmmInput.revStatesList[maxStateRowIndex]);
                 maxStateRowIndex = BackTrack[maxStateRowIndex, wordIndex--];
@@ -104,12 +129,8 @@ namespace HMM
             sb.Add(Input);
             sb.Reverse();
             var result = string.Join(" ", sb);
-            Console.WriteLine(result);
-            Console.WriteLine("finished building the vertibi table : ");
-            stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            Console.ReadLine();
-            
+            Sw.WriteLine(result);
+           
         }
     }
 }

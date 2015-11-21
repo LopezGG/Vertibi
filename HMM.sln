@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HMM", "HMM\HMM.csproj", "{54A44F39-8647-46A0-AD05-F3E05744AA3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvertFormat", "ConvertFormat\ConvertFormat.csproj", "{F6D5EE42-F441-4B15-83B5-C66B7E0D84EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{54A44F39-8647-46A0-AD05-F3E05744AA3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54A44F39-8647-46A0-AD05-F3E05744AA3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54A44F39-8647-46A0-AD05-F3E05744AA3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6D5EE42-F441-4B15-83B5-C66B7E0D84EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6D5EE42-F441-4B15-83B5-C66B7E0D84EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6D5EE42-F441-4B15-83B5-C66B7E0D84EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6D5EE42-F441-4B15-83B5-C66B7E0D84EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
